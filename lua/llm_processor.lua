@@ -44,116 +44,114 @@ end
 local function processor(key, env)
     if key:release() then return 2 end
 
-    local ctx = env.engine.context
-    local ch = ctx.commit_history
-    if not ch then return 2 end
+    pcall(function()
+        local ctx = env.engine.context
+        local ch = ctx.commit_history
+        if not ch then return end
 
-    -- 追踪满码（顶屏时回退用）
-    if ctx.input ~= "" and #ctx.input >= MAX_CODE then
-        last_full = ctx.input
-    end
-
-    -- 输入变空 → 捕获本次上屏码（手动选词、Tab、数字键）
-    if prev_input ~= "" and ctx.input == "" then
-        pending_code = prev_input
-        last_full = ""  -- 已消费
-    end
-    prev_input = ctx.input
-
-    -- 退格
-    if ctx.input == "" and key:repr() == "BackSpace" then
-        if #history > 0 then
-            append_raw(SPLIT .. BSP)
+        -- 追踪满码（顶屏时回退用）
+        if ctx.input ~= "" and #ctx.input >= MAX_CODE then
+            last_full = ctx.input
         end
-        return 2
-    end
 
-    -- Delete
-    if ctx.input == "" and key:repr() == "Delete" then
-        if #history > 0 then
-            append_raw(SPLIT .. BSP)
+        -- 输入变空 → 捕获本次上屏码（手动选词、Tab、数字键）
+        if prev_input ~= "" and ctx.input == "" then
+            pending_code = prev_input
+            last_full = ""
         end
-        return 2
-    end
+        prev_input = ctx.input
 
-    -- 导航键 → 换行
-    if ctx.input == "" and NAV_KEYS[key:repr()] then
-        if #history > 0 then
-            append_raw("\n")
-        end
-        return 2
-    end
-
-    -- 同步 commit_history
-    local all = ch:to_table()
-    if all and #all > 0 then
-        history = {}
-        for i = 1, #all do
-            local entry = all[i]
-            if entry and entry.text and #entry.text >= 1 then
-                table.insert(history, entry.text)
+        -- 退格
+        if ctx.input == "" and key:repr() == "BackSpace" then
+            if #history > 0 then
+                append_raw(SPLIT .. BSP)
             end
+            return
         end
 
-        local overlap = find_overlap(prev_hist, history)
-        local new_words = {}
-        for i = overlap + 1, #history do
-            table.insert(new_words, history[i])
+        -- Delete
+        if ctx.input == "" and key:repr() == "Delete" then
+            if #history > 0 then
+                append_raw(SPLIT .. BSP)
+            end
+            return
         end
 
-        if #new_words > 0 then
-            if overlap == 0 then
+        -- 导航键 → 换行
+        if ctx.input == "" and NAV_KEYS[key:repr()] then
+            if #history > 0 then
+                append_raw("\n")
+            end
+            return
+        end
+
+        -- 同步 commit_history
+        local all = ch:to_table()
+        if all and #all > 0 then
+            history = {}
+            for i = 1, #all do
+                local entry = all[i]
+                if entry and entry.text and #entry.text >= 1 then
+                    table.insert(history, entry.text)
+                end
+            end
+
+            local overlap = find_overlap(prev_hist, history)
+            local new_words = {}
+            for i = overlap + 1, #history do
+                table.insert(new_words, history[i])
+            end
+
+            if #new_words > 0 then
+                if overlap == 0 then
+                    append_raw("\n")
+                end
+
+                local parts = {}
+                for _, w in ipairs(new_words) do
+                    local has_chinese = w:match("[^\1-\127]")
+                    local code = ""
+                    if has_chinese then
+                        code = pending_code
+                        if code == "" then
+                            code = last_full
+                        end
+                    end
+                    pending_code = ""
+                    last_full = ""
+                    if #w == 1 and #code >= 3 then
+                        code = code:sub(1, 2)
+                    end
+                    table.insert(parts, w .. TAB .. code)
+                end
+                local sep = (overlap > 0 and SPLIT or "")
+                append_raw(sep .. table.concat(parts, SPLIT))
+            end
+
+            if #new_words == 0 and #history < #prev_hist and #history < 3 then
+                pending_code = ""
+                last_full = ""
                 append_raw("\n")
             end
 
-            local parts = {}
-            for _, w in ipairs(new_words) do
-                -- 含中文才分配码，跳过纯英文/数字/标点
-                local has_chinese = w:match("[^\1-\127]")
-                local code = ""
-                if has_chinese then
-                    -- 优先手动捕获的码，其次满码（顶屏回退），用完即清
-                    code = pending_code
-                    if code == "" then
-                        code = last_full
-                    end
-                end
-                pending_code = ""
-                last_full = ""
-                -- 单字 3 码只需前 2 码（第 3 码是形码，由字本身决定）
-                if #w == 1 and #code >= 3 then
-                    code = code:sub(1, 2)
-                end
-                table.insert(parts, w .. TAB .. code)
+            prev_hist = {}
+            for _, v in ipairs(history) do table.insert(prev_hist, v) end
+
+            -- Context 已更新，立即预解码。与 filter 使用同一个 DLL
+            if not llm_prep then
+                local sc = env.engine.schema.config
+                local backend = (sc:get_string("llm_rerank/backend") or "cpu")
+                local modname = (backend == "gpu" or backend == "cuda") and "rime_llm_cuda" or "rime_llm"
+                local ok_dll, result = pcall(require, modname)
+                if ok_dll then llm_prep = result end
             end
-            local sep = (overlap > 0 and SPLIT or "")
-            append_raw(sep .. table.concat(parts, SPLIT))
+            local cur_ctx = _G.llm_context_get()
+            if llm_prep and llm_prep.prepare and cur_ctx ~= last_prep_ctx then
+                last_prep_ctx = cur_ctx
+                pcall(llm_prep.prepare, cur_ctx)
+            end
         end
-
-        if #new_words == 0 and #history < #prev_hist and #history < 3 then
-            pending_code = ""
-            last_full = ""
-            append_raw("\n")
-        end
-
-        prev_hist = {}
-        for _, v in ipairs(history) do table.insert(prev_hist, v) end
-
-        -- Context 已更新，立即预解码。与 filter 使用同一个 DLL
-        if not llm_prep then
-            -- 读取 backend 配置，和 filter 一致
-            local sc = env.engine.schema.config
-            local backend = (sc:get_string("llm_rerank/backend") or "cpu")
-            local modname = (backend == "gpu" or backend == "cuda") and "rime_llm_cuda" or "rime_llm"
-            local ok, result = pcall(require, modname)
-            if ok then llm_prep = result end
-        end
-        local cur_ctx = _G.llm_context_get()
-        if llm_prep and llm_prep.prepare and cur_ctx ~= last_prep_ctx then
-            last_prep_ctx = cur_ctx
-            pcall(llm_prep.prepare, cur_ctx)
-        end
-    end
+    end)
 
     return 2
 end
