@@ -27,7 +27,6 @@ engine:
     - recognizer
     - chord_composer
     - lua_processor@*pdbj.topup_processor #上屏处理器，实现顶屏/清屏规则
-    - lua_processor@llm_processor #LLM 上屏收集+预解码
     - speller
     - key_binder
     - punctuator
@@ -51,7 +50,6 @@ engine:
     - simplifier
     - uniquifier
     - lua_filter@*pdbj.clear_filter
-    - lua_filter@llm_filter #LLM 候选词重排序
 
 simplifier:
   option_name: zh_simp_s2t

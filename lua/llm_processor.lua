@@ -151,7 +151,7 @@ local function processor(key, env)
         local cur_ctx = _G.llm_context_get()
         if llm_prep and llm_prep.prepare and cur_ctx ~= last_prep_ctx then
             last_prep_ctx = cur_ctx
-            llm_prep.prepare(cur_ctx)
+            pcall(llm_prep.prepare, cur_ctx)
         end
     end
 
