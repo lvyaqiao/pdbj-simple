@@ -27,6 +27,7 @@ engine:
     - recognizer
     - chord_composer
     - lua_processor@*pdbj.topup_processor #上屏处理器，实现顶屏/清屏规则
+    - lua_processor@llm_processor #LLM 上屏收集+预解码
     - speller
     - key_binder
     - punctuator
@@ -50,6 +51,7 @@ engine:
     - simplifier
     - uniquifier
     - lua_filter@*pdbj.clear_filter
+    - lua_filter@llm_filter #LLM 候选词重排序
 
 simplifier:
   option_name: zh_simp_s2t
@@ -1618,3 +1620,11 @@ reverse_lookup:
   comment_format:
     - "xform/~//"
   tags: [extra]
+
+llm_rerank:
+  backend: cpu
+  model_path: "d:/gguf_models/Qwen3.5-0.8B-Q4_K_M.gguf"
+  max_tokens: 6
+  max_candidates: 5
+  min_code_len: 4
+  min_tokens: 1
