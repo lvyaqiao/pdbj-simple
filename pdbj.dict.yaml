@@ -1,0 +1,41 @@
+---
+name: pdbj
+version: 20241116
+use_preset_vocabulary: false
+sort: original
+import_tables:
+  - pdbj.char
+  - pdbj.word
+  - pdbj.cz
+  - pdbj.fuhao
+columns:
+  - text
+  - code
+  - stem
+encoder:
+  exclude_patterns:
+    - '^(Z.Z)$'
+  rules:
+    - length_equal: 2
+      formula: "AaAbAcBaBbBc"
+    - length_equal: 3
+      formula: "AaAbAcBaBbBdCaCbCc"
+    - length_in_range: [4,20]
+      formula: "AaAbAcBaBbBdZaZbZc"
+...
+
+说：“	DbZ
+说：“	Dba
+说：“	DbZ
+说：“	Dba
+么？	lZa
+呢？	BZa
+家	dZa
+发	jZa
+差	wZa
+她	sZa
+
+
+# 人名
+徐訏	NfZNdZ
+简媜	dxZegZ
