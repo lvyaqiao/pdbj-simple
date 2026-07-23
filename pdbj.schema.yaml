@@ -56,7 +56,8 @@ simplifier:
   opencc_config: s2t.json
 speller:
   auto_select: true
-  # 自动选择模式：单手(.Z.)|一击带空格(Z..)|两击(..a)|三击以上(....+) → 自动选中首选
+  # 自动选择模式：与 lua/pdbj/common.lua 的 SPELLER_AUTO_SELECT_PATTERN 同步
+  # 修改顶屏规则时请同时更新 common.lua
   auto_select_pattern: '^(.Z.|Z..|..a|....+)$'
   alphabet: 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
   algebra:

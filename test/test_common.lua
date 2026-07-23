@@ -1,6 +1,5 @@
 --- common.lua 测试
 
--- 设置模块搜索路径，使 require("pdbj/common") 能找到 lua/pdbj/common.lua
 local script_dir = debug.getinfo(1, "S").source:match("@(.*[/\\])") or ""
 package.path = package.path .. ";" .. script_dir .. "../lua/?.lua"
 package.path = package.path .. ";" .. script_dir .. "?.lua"
@@ -115,6 +114,38 @@ runner.test("回归: 与原 check_string_format 行为一致性", function()
             string.format("Mismatch for input '%s': new=%s old=%s", tc,
                 tostring(common.is_topup(tc)), tostring(old_check(tc)))
         )
+    end
+end)
+
+-- 验证 speller 层模式与 processor 层模式的一致性
+runner.test("speller 模式是 topup 模式的子集", function()
+    -- SPELLER_AUTO_SELECT_PATTERN 匹配的所有字符串都应被 TOPUP_PATTERNS 覆盖
+    local speller_pat = common.SPELLER_AUTO_SELECT_PATTERN
+    assert(type(speller_pat) == "string", "SPELLER_AUTO_SELECT_PATTERN must be a string")
+    assert(#speller_pat > 0, "SPELLER_AUTO_SELECT_PATTERN must not be empty")
+
+    -- 测试每种 speller 子模式
+    local cases = {
+        -- .Z. (一击字)
+        { code = "aZa", desc = "one-stroke char (aZZ-like)" },
+        { code = "oZo", desc = "one-stroke char (oZZ-like)" },
+        -- Z.. (零声介)
+        { code = "Zaa", desc = "zero-initial + rhyme" },
+        { code = "Zb1", desc = "zero-initial + rhyme variant" },
+        -- ..a (两击末尾a)
+        { code = "aba", desc = "two-stroke ending in a" },
+        -- ....+ (四字符以上)
+        { code = "abcd", desc = "4 chars exactly" },
+        { code = "abcde", desc = "5 chars" },
+        { code = "abcdefgh", desc = "8 chars" },
+    }
+    for _, c in ipairs(cases) do
+        local match_speller = string.match(c.code, speller_pat)
+        local match_topup = common.is_topup(c.code)
+        if match_speller then
+            assert(match_topup,
+                string.format("speller matched '%s' (%s) but topup did not", c.code, c.desc))
+        end
     end
 end)
 
