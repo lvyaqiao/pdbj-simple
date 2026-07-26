@@ -149,4 +149,26 @@ runner.test("speller 模式是 topup 模式的子集", function()
     end
 end)
 
+-- 验证 YAML 与 Lua 中 auto_select_pattern 字符串完全相等
+runner.test("auto_select_pattern 与 common.SPELLER_AUTO_SELECT_PATTERN 精确一致", function()
+    local f = io.open("pdbj.schema.yaml", "r")
+    if not f then
+        f = io.open("../pdbj.schema.yaml", "r")
+    end
+    assert(f, "cannot open pdbj.schema.yaml from CWD or parent dir")
+    local content = f:read("*all")
+    f:close()
+
+    local yaml_pattern = content:match("auto_select_pattern:%s*'([^']+)'")
+    assert(yaml_pattern, "failed to extract auto_select_pattern from pdbj.schema.yaml")
+
+    assert(yaml_pattern == common.SPELLER_AUTO_SELECT_PATTERN,
+        string.format(
+            "auto_select_pattern MISMATCH!\n" ..
+            "  YAML (pdbj.schema.yaml):      '%s'\n" ..
+            "  Lua  (common.lua):             '%s'\n" ..
+            "  Please sync and try again.",
+            yaml_pattern, common.SPELLER_AUTO_SELECT_PATTERN))
+end)
+
 runner.summary()

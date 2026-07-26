@@ -1,7 +1,7 @@
 local common = require("pdbj/common")
 
 local function filter(input, env)
-    context = env.engine.context
+    local context = env.engine.context
     for cand in input:iter() do
         yield(cand)
     end

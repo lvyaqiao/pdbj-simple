@@ -1,14 +1,19 @@
 --- 自动生成的 preedit_format 映射表
---- 来源: pdbj.schema.yaml > translator.preedit_format > algebra
---- 修改此文件前建议先修改源 algebra 并重新生成:
+--- 来源: tools/preedit_mappings.tsv
+--- 生成器: tools/gen_preedit_map.lua
+---
+--- 重新生成命令:
 ---   cd project_root && lua tools\gen_preedit_map.lua
---- 或手动维护此文件，同时更新源 algebra 保持同步。
+---
+--- 修改流程: 
+---   1. 编辑 tools/preedit_mappings.tsv
+---   2. 运行 gen_preedit_map.lua 重新生成此文件
+---   3. 运行 test\test_preedit.lua 验证
 
---- 共 1273 条映射
+--- 共 1273 条映射 (含 1 条 catch-all)
 --- key = 抽象编码_ (e.g. 'AA_'), value = 拼音显示 (e.g. 'ao3')
 
 local preedit_map = {
-    [".._"] = "X",
     ["AA_"] = "ao3",
     ["AB_"] = "n4",
     ["AC_"] = "ai2",
@@ -1281,6 +1286,7 @@ local preedit_map = {
     ["zx_"] = "kan3",
     ["zy_"] = "kang1",
     ["zz_"] = "kou4",
+    [".._"] = "X",
 }
 
 return preedit_map

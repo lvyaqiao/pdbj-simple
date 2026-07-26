@@ -1,8 +1,11 @@
---- preedit_filter.lua - 替代 translator.preedit_format algebra 中 A-Z 组映射的 Lua filter
+--- preedit_filter.lua - 替代 translator.preedit_format algebra 的 Lua filter
 --- 将抽象编码 (如 aA, ab 等) 转换为带声调的拼音显示
 ---
+--- 数据来源: lua/pdbj/preedit_map.lua (由 tools/gen_preedit_map.lua 根据
+---   tools/preedit_mappings.tsv 生成)
+---
 --- 用法:
----   1. 测试: local pf = require("pdbj/preedit_filter"); pf.format_preedit("aA")
+---   1. 测试: lua -e "pf=require('pdbj.preedit_filter') print(pf.format_preedit('aA'))"
 ---   2. Rime: 在 schema engine.filters 中添加 lua_filter@*pdbj.preedit_filter
 
 local preedit_map = require("pdbj/preedit_map")
@@ -40,14 +43,14 @@ end
 
 --- 格式化单个音节编码为拼音显示
 --- @param code string 形如 "aA" 的两字符编码
---- @return string 拼音显示 (如 "dǎo")
+--- @return string 拼音显示 (如 "dǎo"), 未匹配时返回原始编码
 local function format_syllable(code)
     if #code < 2 then return code end
 
     local key = code .. "_"
     local pinyin = preedit_map[key]
 
-    if not pinyin or pinyin == "X" then
+    if not pinyin then
         return code
     end
 
@@ -59,10 +62,19 @@ end
 
 --- 格式化预编辑显示: 将抽象编码转换为拼音显示
 --- 编码按 2 字符一组分割，每组映射为一个音节
---- @param code string 抽象编码 (e.g. "aA", "aAoc")
---- @return string 格式化后的拼音显示 (e.g. "dǎo", "dǎolì")
+--- @param code string 抽象编码 (e.g. "aA", "aAoc"), 可能含光标标记 (. _ 空格)
+--- @return string 格式化后的拼音显示 (e.g. "dǎo", "dǎo lì")
 function format_preedit(code)
     if not code or code == "" then
+        return ""
+    end
+
+    -- 剥离非字母字符和占位符 Z
+    --   a-zA-Y = 保留所有编码字母 (a-z 小写声母/韵调, A-Y 大写声母/韵调)
+    --   Z = 占位符 (无韵调/无声介), 对拼音显示无意义
+    code = code:gsub("[^a-zA-Y]+", "")
+
+    if code == "" then
         return ""
     end
 

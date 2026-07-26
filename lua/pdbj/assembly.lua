@@ -1,40 +1,23 @@
-local this = {}
+--- assembly.lua - 部首标注 filter
+--- 为候选词附加部首注释 (如 "［扌］")
+---
+--- 数据来源: lua/pdbj/assembly_map.lua (由 tools/gen_assembly_map.lua 根据
+---   lua/pdbj/assembly.txt 生成)
 
----@param env Env
-function this.init(env)
-  this.lookup_tags = { "extra" }
-  ---@type { string : string }
-  this.radicals = {}
-  local path = rime_api.get_user_data_dir() .. "/lua/pdbj/assembly.txt"
-  local file = io.open(path, "r")
-  if not file then
-    return
-  end
-  for line in file:lines() do
-    ---@type string, string
-    local char, radical = line:match("([^\t]+)\t([^\t]+)")
-    this.radicals[char] = radical
-  end
-  file:close()
-end
+local radicals = require("pdbj/assembly_map")
 
----@param segment Segment
----@param env Env
-function this.tags_match(segment, env)
-  return true
-end
+local this = {
+    lookup_tags = { "extra" },
+}
 
----@param translation Translation
----@param env Env
 function this.func(translation, env)
-  for candidate in translation:iter() do
-    local radical = this.radicals[candidate.text]
-    if radical then
-      candidate.comment = candidate.comment .. string.format("［%s］", this.radicals[candidate.text])
+    for candidate in translation:iter() do
+        local radical = radicals[candidate.text]
+        if radical then
+            candidate.comment = candidate.comment .. string.format("［%s］", radical)
+        end
+        yield(candidate)
     end
-    yield(candidate)
-  end
-  return
 end
 
 return this
