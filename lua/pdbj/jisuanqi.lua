@@ -3,9 +3,12 @@
 --
 -- 格式：=<exp>
 -- Lambda語法糖：\<arg>.<exp>|
+-- 單位換算語法糖：<num><unit>>><<unit>>
 --
 -- 例子：
 -- =1+1 輸出 2
+-- =100km>>mile 輸出 62.1371
+-- =32F>>C 輸出 0
 -- =floor(9^(8/7)*cos(deg(6))) 輸出 -3
 -- =e^pi>pi^e 輸出 true
 -- =max({1,7,2}) 輸出 7
@@ -19,8 +22,9 @@ local mathlib    = require("pdbj/calc/mathlib")
 local calculus   = require("pdbj/calc/calculus")
 local functional = require("pdbj/calc/functional")
 local formatter  = require("pdbj/calc/formatter")
+local conv       = require("pdbj/calc/convert")
 
--- 白名單沙箱：用戶表達式只能訪問這三個模塊中的函數
+-- 白名單沙箱：用戶表達式只能訪問上述模塊中的函數
 local sandbox = {}
 for k, v in pairs(mathlib) do
   if k ~= "path" then sandbox[k] = v end
@@ -31,8 +35,12 @@ end
 for k, v in pairs(functional) do
   sandbox[k] = v
 end
+for k, v in pairs(conv) do
+  sandbox[k] = v
+end
 
 local greedy = true
+local conv_pattern = "([%d.]+)([%a]+)>>([%a]+)"
 
 local function calculator_translator(input, seg)
   if string.sub(input, 1, 1) ~= "=" then return end
@@ -46,6 +54,10 @@ local function calculator_translator(input, seg)
   if not expfin then return end
 
   local expe = exp
+  -- 單位換算語法糖: 100km>>mile -> convert(100, "km", "mile")
+  expe = expe:gsub(conv_pattern, function(n, f, t)
+    return 'convert(' .. n .. ', "' .. f .. '", "' .. t .. '")'
+  end)
   -- 鏈式調用語法糖
   expe = expe:gsub("%$", " chain ")
   -- lambda語法糖
