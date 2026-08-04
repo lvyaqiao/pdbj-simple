@@ -1,5 +1,5 @@
 --- preedit_map 映射表测试
---- 验证从 pdbj.schema.yaml algebra 生成的数据正确性
+--- 验证 lua/pdbj/preedit_map.lua 数据正确性
 
 local script_dir = debug.getinfo(1, "S").source:match("@(.*[/\\])") or ""
 package.path = package.path .. ";" .. script_dir .. "../lua/?.lua"
@@ -19,40 +19,36 @@ runner.test("映射表加载成功 (非空 table)", function()
     assert(count > 1200, string.format("expected >1200, got %d", count))
 end)
 
-runner.test("存在 catch-all 规则", function()
-    assert(preedit_map[".._"] == "X", ".._ → X (catch-all)")
+-- 验证关键映射
+runner.test("aA → dao3 (的 → d+ao3)", function()
+    assert(preedit_map["aA"] == "dao3", preedit_map["aA"] or "nil")
 end)
 
--- 验证关键映射 (从原 algebra 手工核对)
-runner.test("aA_ → dao3 (的 → d+ao3)", function()
-    assert(preedit_map["aA_"] == "dao3", preedit_map["aA_"] or "nil")
+runner.test("ab → de1 (的 → d+e1)", function()
+    assert(preedit_map["ab"] == "de1", preedit_map["ab"] or "nil")
 end)
 
-runner.test("ab_ → de1 (的 → d+e1)", function()
-    assert(preedit_map["ab_"] == "de1", preedit_map["ab_"] or "nil")
+runner.test("cA → shao3 (sh+ao3)", function()
+    assert(preedit_map["cA"] == "shao3", preedit_map["cA"] or "nil")
 end)
 
-runner.test("cA_ → shao3 (sh+ao3)", function()
-    assert(preedit_map["cA_"] == "shao3", preedit_map["cA_"] or "nil")
+runner.test("dA → jiao3 (j+i+ao3)", function()
+    assert(preedit_map["dA"] == "jiao3", preedit_map["dA"] or "nil")
 end)
 
-runner.test("dA_ → jiao3 (j+i+ao3)", function()
-    assert(preedit_map["dA_"] == "jiao3", preedit_map["dA_"] or "nil")
+runner.test("hA → bao3 (b+ao3)", function()
+    assert(preedit_map["hA"] == "bao3", preedit_map["hA"] or "nil")
 end)
 
-runner.test("hA_ → bao3 (b+ao3)", function()
-    assert(preedit_map["hA_"] == "bao3", preedit_map["hA_"] or "nil")
-end)
-
-runner.test("yA_ → diao3 (d+i+ao3)", function()
-    assert(preedit_map["yA_"] == "diao3", preedit_map["yA_"] or "nil")
+runner.test("yA → diao3 (d+i+ao3)", function()
+    assert(preedit_map["yA"] == "diao3", preedit_map["yA"] or "nil")
 end)
 
 -- 验证声母分组覆盖
 runner.test("所有声母大写组 (A-Z) 都有映射", function()
     local initials = {}
     for code in pairs(preedit_map) do
-        if #code == 3 and code ~= ".._" then
+        if #code == 2 then
             local first = code:sub(1, 1)
             initials[first] = (initials[first] or 0) + 1
         end
@@ -71,7 +67,7 @@ end)
 runner.test("所有声母小写组 (a-z) 都有映射", function()
     local initials = {}
     for code in pairs(preedit_map) do
-        if #code == 3 and code ~= ".._" then
+        if #code == 2 then
             local first = code:sub(1, 1)
             initials[first] = (initials[first] or 0) + 1
         end

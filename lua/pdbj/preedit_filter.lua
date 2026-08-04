@@ -1,8 +1,7 @@
 --- preedit_filter.lua - 替代 translator.preedit_format algebra 的 Lua filter
 --- 将抽象编码 (如 aA, ab 等) 转换为带声调的拼音显示
 ---
---- 数据来源: lua/pdbj/preedit_map.lua (由 tools/gen_preedit_map.lua 根据
----   tools/preedit_mappings.tsv 生成)
+--- 数据来源: lua/pdbj/preedit_map.lua (手写维护的映射表)
 ---
 --- 用法:
 ---   1. 测试: lua -e "pf=require('pdbj.preedit_filter') print(pf.format_preedit('aA'))"
@@ -47,8 +46,7 @@ end
 local function format_syllable(code)
     if #code < 2 then return code end
 
-    local key = code .. "_"
-    local pinyin = preedit_map[key]
+    local pinyin = preedit_map[code]
 
     if not pinyin then
         return code

@@ -1,18 +1,8 @@
---- 自动生成的部首映射表
---- 来源: lua/pdbj/assembly.txt
---- 生成器: tools/gen_assembly_map.lua
----
---- 重新生成命令:
----   cd project_root && lua tools\gen_assembly_map.lua
----
---- 修改流程:
----   1. 编辑 lua/pdbj/assembly.txt
----   2. 运行 gen_assembly_map.lua 重新生成此文件
-
+--- assembly_map.lua - 字符 → 部首映射表（手写维护）
 --- 共 8131 条映射
 
 return {
-    ["﻿刍"] = "⺈",
+    ["刍"] = "⺈",
     ["负"] = "⺈",
     ["奂"] = "⺈",
     ["免"] = "⺈",

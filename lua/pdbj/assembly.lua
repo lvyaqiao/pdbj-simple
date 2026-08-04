@@ -1,8 +1,7 @@
 --- assembly.lua - 部首标注 filter
 --- 为候选词附加部首注释 (如 "［扌］")
 ---
---- 数据来源: lua/pdbj/assembly_map.lua (由 tools/gen_assembly_map.lua 根据
----   lua/pdbj/assembly.txt 生成)
+--- 数据来源: lua/pdbj/assembly_map.lua (手写维护的映射表)
 
 local radicals = require("pdbj/assembly_map")
 

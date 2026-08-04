@@ -295,7 +295,7 @@ translator:
   disable_user_dict_for_patterns:
     - '^(...|....Z.|...Z..)$'
   # preedit_format 已迁移至 lua_filter@*pdbj.preedit_filter
-  # 映射数据源: tools/preedit_mappings.tsv → lua/pdbj/preedit_map.lua
+  # 映射数据: lua/pdbj/preedit_map.lua
   comment_format:
     - xform/~.*//
 punctuator:
