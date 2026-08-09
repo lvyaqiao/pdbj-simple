@@ -1,0 +1,12 @@
+---
+name: pdbj.shengpi
+version: 20260809
+use_preset_vocabulary: false
+sort: original
+columns:
+  - text
+  - code
+...
+# 生僻人名（訏/媜 单字码过长，按整词输入）
+徐訏	NfZNdZ
+简媜	dxZegZ
