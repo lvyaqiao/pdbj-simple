@@ -2,6 +2,9 @@
 installation.yaml
 user.yaml
 
+# 前端外观属个人偏好，不入库
+weasel.custom.yaml
+
 pdbj.userdb/
 build/
 weasel-0.17.4/
